@@ -1,0 +1,42 @@
+version: 2.1
+
+executors:
+  machine-executor:
+    machine:
+      image: ubuntu-1604:202010-01
+
+jobs:
+  build:
+    executor:
+      name: machine-executor
+    steps:
+      - checkout
+      - run:
+          name: Build Docker container
+          command: |
+            set -x
+            docker-compose build
+      - run:
+          name: Confirm directory state and versions
+          command: |
+            set -x
+            pwd && ls
+            docker-compose run --rm app bash -c "python --version && pip --version && poetry --version"
+      - run:
+          name: Up Docker containers and Confirm logs
+          command: |
+            set -x
+            docker-compose up -d
+            sleep 5
+            docker ps -f status=running
+            docker-compose logs
+      # - run:
+      #     name: Run Pytest
+      #     command: |
+      #       set -x
+      #       docker-compose exec app sh -c "pytest"
+      - run:
+          name: Finish build pipeline
+          command: |
+            set -x
+            echo "finished build."
